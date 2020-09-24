@@ -64,6 +64,6 @@ typings/
 .serverless
 
 # IDE
-.idea
+.idea 
 
 /tmp/*/**
