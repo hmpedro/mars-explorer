@@ -1,11 +1,10 @@
 const readline = require('readline');
-const leftBehavior = require('./leftBehavior.js');
-const righBehavior = require('./rightBehavior.js');
-const moveBehavior = require('./moveBehavior.js');
+const leftBehavior = require('./behaviors/leftBehavior.js');
+const righBehavior = require('./behaviors/rightBehavior.js');
+const moveBehavior = require('./behaviors/moveBehavior.js');
 
 const axisX = 0;
 const axisY = 1;
-const directionPosition = 2;
 
 const behaviors = {
     'L': leftBehavior,
