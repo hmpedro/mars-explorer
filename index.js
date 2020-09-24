@@ -1,117 +1,36 @@
 const readline = require('readline');
+const leftBehavior = require('./leftBehavior.js');
+const righBehavior = require('./rightBehavior.js');
+const moveBehavior = require('./moveBehavior.js');
 
 const axisX = 0;
 const axisY = 1;
-const direction = 2;
+const directionPosition = 2;
 
-function executeRobot(robot) {
-    const {pos: robotPos, commandSequence} = robot;
+const behaviors = {
+    'L': leftBehavior,
+    'R': righBehavior,
+    'M': moveBehavior
+}
+
+function executeRobot(robot, upperRightCorner) {
+    const { pos, commandSequence} = robot;
 
     commandSequence.forEach(command => {
-        switch (robotPos[direction]) {
-            case 'N': {
-                switch (command) {
-                    case 'L': {
-                        robotPos[direction] = 'W';
-                        break;
-                    }
+        const commandBehaviors = behaviors[command];
+        const action = commandBehaviors[pos.direction];
 
-                    case 'R': {
-                        robotPos[direction] = 'E';
-                        break;
-                    }
-
-                    case 'M': {
-                        robotPos[axisY] += 1;
-                        break;
-                    }
-
-                    default : {
-                        console.log('deu ruim no comando pro Norte');
-                    }
-                }
-
-                break;
-            }
-
-            case 'S': {
-                switch (command) {
-                    case 'L': {
-                        robotPos[direction] = 'E';
-                        break;
-                    }
-
-                    case 'R': {
-                        robotPos[direction] = 'W';
-                        break;
-                    }
-
-                    case 'M': {
-                        robotPos[axisY] -= 1;
-                        break;
-                    }
-
-                    default : {
-                        console.log('deu ruim no comando pro Sul');
-                    }
-                }
-
-                break;
-            }
-
-            case 'E': {
-                switch (command) {
-                    case 'L': {
-                        robotPos[direction] = 'N';
-                        break;
-                    }
-
-                    case 'R': {
-                        robotPos[direction] = 'S';
-                        break;
-                    }
-
-                    case 'M': {
-                        robotPos[axisX] += 1;
-                        break;
-                    }
-
-                    default : {
-                        console.log('deu ruim no comando');
-                    }
-                }
-                break;
-            }
-
-            case 'W': {
-                switch (command) {
-                    case 'L': {
-                        robotPos[direction] = 'S';
-                        break;
-                    }
-
-                    case 'R': {
-                        robotPos[direction] = 'N';
-                        break;
-                    }
-
-                    case 'M': {
-                        robotPos[axisX] -= 1;
-                        break;
-                    }
-
-                    default : {
-                        console.log('deu ruim no comando');
-                    }
-                }
-                break;
-            }
-
-            default: {
-                console.log('Deu ruim a direção do robo');
-            }
-        }
+        action(robot);
     });
+
+    if (robot.pos.x < 0 ||
+        robot.pos.x > upperRightCorner.x ||
+        robot.pos.y < 0 ||
+        robot.pos.y > upperRightCorner.y) {
+        robot.error = 'Invalid robot action, didn\'t executed correctly';
+    }
+
+    return robot;
 }
 
 let upperRightCorner;
@@ -130,6 +49,10 @@ rl.on('line', function(line) {
 
     if (line.length === 3 && /\d \d/g.test(line)) {
         upperRightCorner = line.split(' ');
+        upperRightCorner = {
+            x: upperRightCorner[0],
+            y: upperRightCorner[1]
+        }
 
         function recursiveAskForRobots() {
             rl.question('New Robot. Insert initial position or "exit" to leave \n', function (posInput) {
@@ -142,9 +65,13 @@ rl.on('line', function(line) {
                             return rl.close();
 
                         if (/[L|M|R]+/g.test(commandSequenceInput)) {
-                            const pos = posInput.split(' ');
-                            pos[axisX] = Number(pos[axisX]);
-                            pos[axisY] = Number(pos[axisY]);
+                            const posCleaned = posInput.trim().split(' ');
+                            const pos = {
+                                x: Number(posCleaned[axisX]),
+                                y: Number(posCleaned[axisY]),
+                                direction: posCleaned[2]
+                            };
+
                             robots.push({pos, commandSequence: commandSequenceInput.split('')});
                         } else {
                             console.log('Wrong input, please use like: "LMRLMR". Try a new robot.')
@@ -165,10 +92,16 @@ rl.on('line', function(line) {
         console.log('Wrong input. Please use like: "5 5"')
     }
 }).on('close',function(){
+    console.log('------------------------------------------');
+    console.log('');
+    console.log('RESULTS');
+    console.log('');
+
     robots.forEach((robot,index) => {
-        executeRobot(robot);
-        console.log(`Robot ${index+1}`, robot.pos)
+        executeRobot(robot, upperRightCorner);
+        console.log(`Robot ${index+1}`, robot.error ? robot.error : robot.pos);
     })
 
     process.exit(0);
 });
+
